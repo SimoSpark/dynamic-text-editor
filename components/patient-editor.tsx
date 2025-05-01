@@ -9,20 +9,23 @@ import Placeholder from "@tiptap/extension-placeholder";
 import MenuBar from "./rich-text-editor/menu-bar";
 import { Patient } from "@/types/patient";
 import { useEffect, useState } from "react";
+import { getTemplateById } from "@/data/templates";
 
 interface PatientRapportEditorProps {
   patient: Patient;
   onChange: (content: string) => void;
+  templateId?: string;
 }
 
 export default function PatientRapportEditor({
   patient,
   onChange,
+  templateId = "default",
 }: PatientRapportEditorProps) {
   const [date, setDate] = useState<string>("");
 
   useEffect(() => {
-    // Formatter la date actuelle
+    // Format current date
     const now = new Date();
     const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
@@ -32,8 +35,53 @@ export default function PatientRapportEditor({
     setDate(now.toLocaleDateString('fr-FR', options));
   }, []);
 
-  // Créer le contenu initial du rapport(template with patient info)
+  // Create the initial report content (template with patient info)
   const createInitialContent = () => {
+    // Get the selected template or use default
+    const selectedTemplate = getTemplateById(templateId);
+    
+    // Default template if none specified or not found
+    if (!selectedTemplate || templateId === "default") {
+      return `
+        <h1 style="text-align: center;">RAPPORT MÉDICAL</h1>
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+          <div>
+            <p><strong>Patient:</strong> ${patient.prenom} ${patient.nom}</p>
+            <p><strong>Âge:</strong> ${patient.age} ans</p>
+          </div>
+          <div>
+            <p><strong>Date:</strong> ${date}</p>
+            <p><strong>Référence:</strong> RM-${patient.id}-${new Date().getFullYear()}</p>
+          </div>
+        </div>
+        
+        <h2>Description médicale</h2>
+        <div style="padding: 10px; background-color: #f8f8f8; border-radius: 5px; margin-bottom: 20px;">
+          ${patient.description}
+        </div>
+        
+        <h2>Conseils et prescriptions</h2>
+        <div style="padding: 10px; background-color: #f8f8f8; border-radius: 5px; margin-bottom: 20px;">
+          ${patient.conseils}
+        </div>
+        
+        <div style="margin-top: 40px;">
+          <p><strong>Médecin:</strong> Dr ti7rt</p>
+          <p><strong>Signature:</strong> ti7rt ahmed </p>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 0.8em; color: #666; text-align: center;">
+          <p>Ce document est confidentiel et contient des informations médicales protégées.</p>
+        </div>
+      `;
+    }
+    
+    // Apply template with patient information
+    let templateContent = selectedTemplate.content
+      .replace(/{{DATE}}/g, date);
+    
+    // Add the standard patient header and footer to the template
     return `
       <h1 style="text-align: center;">RAPPORT MÉDICAL</h1>
       
@@ -48,15 +96,7 @@ export default function PatientRapportEditor({
         </div>
       </div>
       
-      <h2>Description médicale</h2>
-      <div style="padding: 10px; background-color: #f8f8f8; border-radius: 5px; margin-bottom: 20px;">
-        ${patient.description}
-      </div>
-      
-      <h2>Conseils et prescriptions</h2>
-      <div style="padding: 10px; background-color: #f8f8f8; border-radius: 5px; margin-bottom: 20px;">
-        ${patient.conseils}
-      </div>
+      ${templateContent}
       
       <div style="margin-top: 40px;">
         <p><strong>Médecin:</strong> Dr ti7rt</p>
@@ -102,12 +142,12 @@ export default function PatientRapportEditor({
     },
   });
 
-  // Mettre à jour le contenu quand le patient change
+  // Update content when the patient or template changes
   useEffect(() => {
     if (editor && !editor.isDestroyed) {
       editor.commands.setContent(createInitialContent());
     }
-  }, [patient, date]);
+  }, [patient, date, templateId]);
 
   return (
     <div className="print:shadow-none">

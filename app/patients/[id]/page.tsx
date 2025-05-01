@@ -7,14 +7,19 @@ import { getPatientById, updatePatient } from "@/data/patients";
 import PatientRapportEditor from "@/components/patient-editor";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Printer } from "lucide-react";
-//Individual patient (rapportt)page
+import { getMedicalTemplates } from "@/data/templates";
+
+// Individual patient (rapport) page
 export default function PatientPage() {
   const params = useParams();
   const router = useRouter();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [rapport, setRapport] = useState("");
-//Loads patient details by ID
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("default");
+
+  // Loads patient details by ID
   useEffect(() => {
     const patientId = Number(params.id);
     const patientData = getPatientById(patientId);
@@ -22,6 +27,9 @@ export default function PatientPage() {
     if (patientData) {
       setPatient(patientData);
     }
+    
+    // Load available templates
+    setTemplates(getMedicalTemplates());
     setLoading(false);
   }, [params.id]);
 
@@ -31,17 +39,22 @@ export default function PatientPage() {
 
   const handleSave = () => {
     if (patient) {
-      updatePatient(patient);
+      updatePatient({...patient, rapport});
       alert("Le rapport médical a été enregistré.");
     }
   };
-  //we can print the report 
+  
+  // We can print the report 
   const handlePrint = () => {
     window.print();
   };
   
   const handleRapportChange = (content: string) => {
     setRapport(content);
+  };
+
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedTemplate(e.target.value);
   };
 
   if (loading) {
@@ -79,10 +92,31 @@ export default function PatientPage() {
         </div>
       </div>
 
+      {/* Template selector */}
+      <div className="mb-4 print:hidden">
+        <label htmlFor="template" className="block text-sm font-medium mb-2">
+          Type d'examen / Condition médicale:
+        </label>
+        <select
+          id="template"
+          className="w-full p-2 border rounded-md"
+          value={selectedTemplate}
+          onChange={handleTemplateChange}
+        >
+          <option value="default">Rapport médical standard</option>
+          {templates.map((template) => (
+            <option key={template.id} value={template.id}>
+              {template.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="mb-6 print:mb-4">
         <PatientRapportEditor 
           patient={patient} 
-          onChange={handleRapportChange} 
+          onChange={handleRapportChange}
+          templateId={selectedTemplate}
         />
       </div>
     </div>

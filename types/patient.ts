@@ -7,4 +7,5 @@ export interface Patient {
     age: number;
     description: string;
     conseils: string;
+    rapport?: string; // we add this to store the saved report
   }
