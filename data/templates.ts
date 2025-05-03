@@ -1,5 +1,7 @@
+import { MedicalTemplate } from "@/types/templete";
+
 // Collection of medical templates
-const medicalTemplates: MedicalTemplate[] = [
+let medicalTemplates: MedicalTemplate[] = [
   {
     id: "xray",
     name: "Radiographie",
@@ -164,10 +166,76 @@ const medicalTemplates: MedicalTemplate[] = [
 
 // Fonction pour obtenir tous les templates
 export function getMedicalTemplates(): MedicalTemplate[] {
+  // Récupérer les templates depuis le localStorage si disponible (côté client)
+  if (typeof window !== 'undefined') {
+    const savedTemplates = localStorage.getItem('medical-templates');
+    if (savedTemplates) {
+      try {
+        const parsedTemplates = JSON.parse(savedTemplates);
+        // On met à jour notre liste avec les templates sauvegardés
+        medicalTemplates = parsedTemplates;
+      } catch (error) {
+        console.error('Erreur lors de la récupération des templates:', error);
+      }
+    }
+  }
+  
   return medicalTemplates;
 }
 
 // Fonction pour trouver un template par son ID
 export function getTemplateById(id: string): MedicalTemplate | undefined {
-  return medicalTemplates.find(template => template.id === id);
+  // Assurons-nous d'avoir la dernière version des templates
+  const templates = getMedicalTemplates();
+  return templates.find(template => template.id === id);
+}
+
+// Fonction pour ajouter un nouveau template
+export function addTemplate(template: MedicalTemplate): void {
+  // Récupérer la liste actuelle
+  const currentTemplates = getMedicalTemplates();
+  
+  // Vérifier si un template avec cet ID existe déjà
+  const existingIndex = currentTemplates.findIndex(t => t.id === template.id);
+  
+  if (existingIndex !== -1) {
+    // Mettre à jour le template existant
+    currentTemplates[existingIndex] = template;
+  } else {
+    // Ajouter le nouveau template
+    currentTemplates.push(template);
+  }
+  
+  // Mettre à jour la liste en mémoire
+  medicalTemplates = currentTemplates;
+  
+  // Sauvegarder dans le localStorage (côté client)
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('medical-templates', JSON.stringify(currentTemplates));
+  }
+}
+
+// Fonction pour supprimer un template
+export function removeTemplate(id: string): void {
+  // On ne supprime pas les templates par défaut
+  const defaultTemplateIds = ['xray', 'mri', 'fracture-knee', 'fracture-hand', 'ct-scan'];
+  
+  if (defaultTemplateIds.includes(id)) {
+    console.warn('Impossible de supprimer un template par défaut');
+    return;
+  }
+  
+  // Récupérer la liste actuelle
+  const currentTemplates = getMedicalTemplates();
+  
+  // Filtrer le template à supprimer
+  const updatedTemplates = currentTemplates.filter(template => template.id !== id);
+  
+  // Mettre à jour la liste en mémoire
+  medicalTemplates = updatedTemplates;
+  
+  // Sauvegarder dans le localStorage (côté client)
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('medical-templates', JSON.stringify(updatedTemplates));
+  }
 }

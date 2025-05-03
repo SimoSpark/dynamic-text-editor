@@ -6,8 +6,9 @@ import { Patient } from "@/types/patient";
 import { getPatientById, updatePatient } from "@/data/patients";
 import PatientRapportEditor from "@/components/patient-editor";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Printer } from "lucide-react";
+import { ArrowLeft, Save, Printer, PenSquare } from "lucide-react";
 import { getMedicalTemplates } from "@/data/templates";
+import TemplateManager from "@/components/template-manager";
 
 // Individual patient (rapport) page
 export default function PatientPage() {
@@ -18,6 +19,7 @@ export default function PatientPage() {
   const [rapport, setRapport] = useState("");
   const [templates, setTemplates] = useState<any[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("default");
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
 
   // Loads patient details by ID
   useEffect(() => {
@@ -29,9 +31,14 @@ export default function PatientPage() {
     }
     
     // Load available templates
-    setTemplates(getMedicalTemplates());
+    refreshTemplates();
     setLoading(false);
   }, [params.id]);
+
+  // Refresh templates list
+  const refreshTemplates = () => {
+    setTemplates(getMedicalTemplates());
+  };
 
   const handleRetour = () => {
     router.push("/patients");
@@ -55,6 +62,17 @@ export default function PatientPage() {
 
   const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedTemplate(e.target.value);
+  };
+
+  // Toggle template manager visibility
+  const toggleTemplateManager = () => {
+    const newState = !showTemplateManager;
+    setShowTemplateManager(newState);
+    
+    // Refresh templates when closing the manager
+    if (!newState) {
+      refreshTemplates();
+    }
   };
 
   if (loading) {
@@ -92,11 +110,23 @@ export default function PatientPage() {
         </div>
       </div>
 
-      {/* Template selector */}
+      {/* Template management section */}
       <div className="mb-4 print:hidden">
-        <label htmlFor="template" className="block text-sm font-medium mb-2">
-          Type d'examen / Condition médicale:
-        </label>
+        <div className="flex justify-between items-center mb-2">
+          <label htmlFor="template" className="block text-sm font-medium">
+            Type d'examen / Condition médicale:
+          </label>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={toggleTemplateManager}
+            className="flex items-center gap-1 text-sm"
+          >
+            <PenSquare className="size-4" /> 
+            {showTemplateManager ? "Fermer" : "Gérer les modèles"}
+          </Button>
+        </div>
+        
         <select
           id="template"
           className="w-full p-2 border rounded-md"
@@ -111,6 +141,13 @@ export default function PatientPage() {
           ))}
         </select>
       </div>
+
+      {/* Template manager */}
+      {showTemplateManager && (
+        <div className="print:hidden">
+          <TemplateManager />
+        </div>
+      )}
 
       <div className="mb-6 print:mb-4">
         <PatientRapportEditor 
