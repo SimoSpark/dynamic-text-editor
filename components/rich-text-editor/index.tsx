@@ -6,14 +6,18 @@ import React from "react";
 import MenuBar from "./menu-bar";
 import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
+import { Patient } from "@/types/patient";
 
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
+  patient?: Patient;
 }
+
 export default function RichTextEditor({
   content,
   onChange,
+  patient,
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -48,7 +52,7 @@ export default function RichTextEditor({
 
   return (
     <div>
-      <MenuBar editor={editor} />
+      <MenuBar editor={editor} patient={patient} />
       <EditorContent editor={editor} />;
     </div>
   );

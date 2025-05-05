@@ -114,7 +114,7 @@ export default function PatientPage() {
       <div className="mb-4 print:hidden">
         <div className="flex justify-between items-center mb-2">
           <label htmlFor="template" className="block text-sm font-medium">
-            Type d'examen / Condition médicale:
+            Type d'examen 
           </label>
           <Button 
             variant="ghost" 

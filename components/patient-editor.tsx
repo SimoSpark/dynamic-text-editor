@@ -152,7 +152,7 @@ export default function PatientRapportEditor({
   return (
     <div className="print:shadow-none">
       <div className="print:hidden">
-        <MenuBar editor={editor} />
+        <MenuBar editor={editor} patient={patient} />
       </div>
       <EditorContent editor={editor} />
     </div>
