@@ -1,15 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Save, Trash2, X, Info, CalendarDays, MessageSquare, User, Stethoscope } from "lucide-react";
 import { addTemplate, getMedicalTemplates, removeTemplate } from "@/data/templates";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   Tabs,
   TabsContent,
@@ -23,7 +17,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-export default function TemplateManagerImproved() {
+export default function TemplateManager() {
   const [templates, setTemplates] = useState(getMedicalTemplates());
   const [isCreating, setIsCreating] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState("");
@@ -134,25 +128,31 @@ export default function TemplateManagerImproved() {
     ]
   };
 
+  // Refresh templates list when component mounts
+  useEffect(() => {
+    refreshTemplates();
+  }, []);
+
   // Refresh templates list
   const refreshTemplates = () => {
     setTemplates(getMedicalTemplates());
   };
 
-  // Insert element into template content
+  // Insert element directly into template content
   const insertContent = (content: string) => {
     setNewTemplateContent(prev => prev + content);
   };
 
-  // Insert a date placeholder with user-friendly label
-  const insertDatePlaceholder = (date: { label: string, value: string }) => {
-    // On insère uniquement la valeur technique ({{DATE}}) mais on affiche le libellé à l'utilisateur
-    insertContent(`<span data-date-var="${date.value}" class="bg-blue-100 px-2 py-1 rounded text-blue-800">${date.label}</span>`);
+  // Insert a date variable directly
+  const insertDateVariable = (date: { label: string, value: string }) => {
+    // Insert the actual variable value directly - no spans
+    insertContent(date.value);
   };
 
-  // Insert a patient info placeholder
-  const insertPatientPlaceholder = (info: { label: string, value: string }) => {
-    insertContent(`<span data-patient-var="${info.value}" class="bg-green-100 px-2 py-1 rounded text-green-800">${info.label}</span>`);
+  // Insert a patient info variable directly
+  const insertPatientVariable = (info: { label: string, value: string }) => {
+    // Insert the actual variable value directly - no spans
+    insertContent(info.value);
   };
 
   // Insert advice block
@@ -172,21 +172,6 @@ export default function TemplateManagerImproved() {
       return;
     }
 
-    // Process content to convert user-friendly spans to actual variables
-    let processedContent = newTemplateContent;
-    
-    // Replace date spans with actual variables
-    contentBlocks.dates.forEach(date => {
-      const spanRegex = new RegExp(`<span data-date-var="${date.value}" class="[^"]*">${date.label}<\/span>`, 'g');
-      processedContent = processedContent.replace(spanRegex, date.value);
-    });
-    
-    // Replace patient info spans with actual variables
-    contentBlocks.patient.forEach(info => {
-      const spanRegex = new RegExp(`<span data-patient-var="${info.value}" class="[^"]*">${info.label}<\/span>`, 'g');
-      processedContent = processedContent.replace(spanRegex, info.value);
-    });
-
     // Generate unique ID based on template name
     const templateId = newTemplateName
       .toLowerCase()
@@ -197,7 +182,7 @@ export default function TemplateManagerImproved() {
     const template = {
       id: templateId,
       name: newTemplateName,
-      content: processedContent
+      content: newTemplateContent
     };
 
     // Add template to storage
@@ -222,71 +207,25 @@ export default function TemplateManagerImproved() {
   const getPreviewContent = () => {
     let previewContent = newTemplateContent;
     
-    // Replace with preview values
-    contentBlocks.dates.forEach(date => {
-      const spanRegex = new RegExp(`<span data-date-var="${date.value}" class="[^"]*">${date.label}<\/span>`, 'g');
-      let previewValue = "";
-      
-      // Generate sample dates for preview
-      switch(date.value) {
-        case "{{DATE}}":
-          previewValue = "8 mai 2025";
-          break;
-        case "{{DATE_SHORT}}":
-          previewValue = "08/05/2025";
-          break;
-        case "{{HEURE}}":
-          previewValue = "14:30";
-          break;
-        case "{{DATE_FUTURE_1W}}":
-          previewValue = "15 mai 2025";
-          break;
-        case "{{DATE_FUTURE_2W}}":
-          previewValue = "22 mai 2025";
-          break;
-        case "{{DATE_FUTURE_1M}}":
-          previewValue = "8 juin 2025";
-          break;
-        case "{{DATE_FUTURE_3M}}":
-          previewValue = "8 août 2025";
-          break;
-        case "{{DATE_FUTURE_6M}}":
-          previewValue = "8 novembre 2025";
-          break;
-        case "{{JOUR_SEMAINE}}":
-          previewValue = "Jeudi";
-          break;
-        default:
-          previewValue = "[date]";
-      }
-      
-      previewContent = previewContent.replace(spanRegex, previewValue);
-    });
+    // Replace variables with preview values
+    // Date variables
+    previewContent = previewContent
+      .replace(/{{DATE}}/g, "8 mai 2025")
+      .replace(/{{DATE_SHORT}}/g, "08/05/2025")
+      .replace(/{{HEURE}}/g, "14:30")
+      .replace(/{{DATE_FUTURE_1W}}/g, "15 mai 2025")
+      .replace(/{{DATE_FUTURE_2W}}/g, "22 mai 2025")
+      .replace(/{{DATE_FUTURE_1M}}/g, "8 juin 2025")
+      .replace(/{{DATE_FUTURE_3M}}/g, "8 août 2025")
+      .replace(/{{DATE_FUTURE_6M}}/g, "8 novembre 2025")
+      .replace(/{{JOUR_SEMAINE}}/g, "Jeudi");
     
-    // Replace patient spans with preview values
-    contentBlocks.patient.forEach(info => {
-      const spanRegex = new RegExp(`<span data-patient-var="${info.value}" class="[^"]*">${info.label}<\/span>`, 'g');
-      let previewValue = "";
-      
-      switch(info.value) {
-        case "{{PATIENT_NOM}}":
-          previewValue = "Dupont";
-          break;
-        case "{{PATIENT_PRENOM}}":
-          previewValue = "Jean";
-          break;
-        case "{{PATIENT_AGE}}":
-          previewValue = "45";
-          break;
-        case "{{REF_ID}}":
-          previewValue = "RM-1234-5678-2025";
-          break;
-        default:
-          previewValue = "[info patient]";
-      }
-      
-      previewContent = previewContent.replace(spanRegex, previewValue);
-    });
+    // Patient variables
+    previewContent = previewContent
+      .replace(/{{PATIENT_NOM}}/g, "Dupont")
+      .replace(/{{PATIENT_PRENOM}}/g, "Jean")
+      .replace(/{{PATIENT_AGE}}/g, "45")
+      .replace(/{{REF_ID}}/g, "RM-1234-5678-2025");
     
     return previewContent;
   };
@@ -354,6 +293,11 @@ export default function TemplateManagerImproved() {
                   onChange={(e) => setNewTemplateContent(e.target.value)}
                 />
                 
+                {/* Aide pour les variables disponibles */}
+                <div className="mb-2 p-2 bg-blue-50 rounded border border-blue-100 text-sm">
+                  <p><strong>Astuce :</strong> Pour insérer des variables, utilisez les boutons ci-dessous. Les variables seront remplacées par les vraies informations lors de la création du rapport.</p>
+                </div>
+                
                 {/* Éléments disponibles */}
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="dates">
@@ -368,9 +312,12 @@ export default function TemplateManagerImproved() {
                             variant="outline" 
                             size="sm"
                             className="justify-start text-left"
-                            onClick={() => insertDatePlaceholder(date)}
+                            onClick={() => insertDateVariable(date)}
                           >
-                            {date.label}
+                            <span className="flex justify-between w-full">
+                              <span>{date.label}</span>
+                              <span className="text-xs text-blue-600 font-mono">{date.value}</span>
+                            </span>
                           </Button>
                         ))}
                       </div>
@@ -389,9 +336,12 @@ export default function TemplateManagerImproved() {
                             variant="outline" 
                             size="sm"
                             className="justify-start text-left"
-                            onClick={() => insertPatientPlaceholder(info)}
+                            onClick={() => insertPatientVariable(info)}
                           >
-                            {info.label}
+                            <span className="flex justify-between w-full">
+                              <span>{info.label}</span>
+                              <span className="text-xs text-green-600 font-mono">{info.value}</span>
+                            </span>
                           </Button>
                         ))}
                       </div>
@@ -447,9 +397,18 @@ export default function TemplateManagerImproved() {
                   className="min-h-[200px] p-4 border rounded-md bg-white"
                   dangerouslySetInnerHTML={{ __html: getPreviewContent() }}
                 />
-                <p className="text-xs text-slate-500 mt-2">
-                  Ceci est un aperçu avec des données d'exemple. Les variables seront remplacées par les informations réelles du patient lors de l'utilisation.
-                </p>
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-xs text-slate-500">
+                    Ceci est un aperçu avec des données d'exemple. Les variables seront remplacées par les informations réelles du patient lors de l'utilisation.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedTab("editor")}
+                  >
+                    Retour à l'éditeur
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
             

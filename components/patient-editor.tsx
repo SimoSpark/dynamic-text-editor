@@ -1,4 +1,3 @@
-
 "use client";
 
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -15,7 +14,7 @@ interface PatientRapportEditorProps {
   patient: Patient;
   onChange: (content: string) => void;
   templateId?: string;
-  doctor?: string; // Optional doctor name
+  doctor?: string;
 }
 
 export default function PatientRapportEditor({
@@ -24,10 +23,16 @@ export default function PatientRapportEditor({
   templateId = "default",
   doctor,
 }: PatientRapportEditorProps) {
-  const [date, setDate] = useState<string>("");
+  const [formattedDate, setFormattedDate] = useState<string>("");
   const [shortDate, setShortDate] = useState<string>("");
   const [currentTime, setCurrentTime] = useState<string>("");
   const [refId, setRefId] = useState<string>("");
+  const [jourSemaine, setJourSemaine] = useState<string>("");
+  const [dateFuture1W, setDateFuture1W] = useState<string>("");
+  const [dateFuture2W, setDateFuture2W] = useState<string>("");
+  const [dateFuture1M, setDateFuture1M] = useState<string>("");
+  const [dateFuture3M, setDateFuture3M] = useState<string>("");
+  const [dateFuture6M, setDateFuture6M] = useState<string>("");
 
   useEffect(() => {
     // Format current date
@@ -39,7 +44,7 @@ export default function PatientRapportEditor({
       month: 'long', 
       day: 'numeric' 
     };
-    setDate(now.toLocaleDateString('fr-FR', options));
+    setFormattedDate(now.toLocaleDateString('fr-FR', options));
     
     // Short date format
     setShortDate(now.toLocaleDateString('fr-FR', {
@@ -57,19 +62,51 @@ export default function PatientRapportEditor({
     // Generate reference ID
     const randomId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     setRefId(`RM-${patient.id}-${randomId}-${now.getFullYear()}`);
+    
+    // Get day of week
+    const joursSemaine = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    setJourSemaine(joursSemaine[now.getDay()]);
+    
+    // Calculate future dates
+    const oneWeek = new Date(now);
+    oneWeek.setDate(now.getDate() + 7);
+    setDateFuture1W(oneWeek.toLocaleDateString('fr-FR', options));
+    
+    const twoWeeks = new Date(now);
+    twoWeeks.setDate(now.getDate() + 14);
+    setDateFuture2W(twoWeeks.toLocaleDateString('fr-FR', options));
+    
+    const oneMonth = new Date(now);
+    oneMonth.setMonth(now.getMonth() + 1);
+    setDateFuture1M(oneMonth.toLocaleDateString('fr-FR', options));
+    
+    const threeMonths = new Date(now);
+    threeMonths.setMonth(now.getMonth() + 3);
+    setDateFuture3M(threeMonths.toLocaleDateString('fr-FR', options));
+    
+    const sixMonths = new Date(now);
+    sixMonths.setMonth(now.getMonth() + 6);
+    setDateFuture6M(sixMonths.toLocaleDateString('fr-FR', options));
+    
   }, [patient.id]);
 
   // Process template and replace variables
   const processTemplate = (templateContent: string): string => {
     // Replace all dynamic variables in the template
     return templateContent
-      .replace(/{{DATE}}/g, date)
+      .replace(/{{DATE}}/g, formattedDate)
       .replace(/{{DATE_SHORT}}/g, shortDate)
       .replace(/{{HEURE}}/g, currentTime)
       .replace(/{{PATIENT_NOM}}/g, patient.nom)
       .replace(/{{PATIENT_PRENOM}}/g, patient.prenom)
       .replace(/{{PATIENT_AGE}}/g, patient.age.toString())
-      .replace(/{{REF_ID}}/g, refId);
+      .replace(/{{REF_ID}}/g, refId)
+      .replace(/{{JOUR_SEMAINE}}/g, jourSemaine)
+      .replace(/{{DATE_FUTURE_1W}}/g, dateFuture1W)
+      .replace(/{{DATE_FUTURE_2W}}/g, dateFuture2W)
+      .replace(/{{DATE_FUTURE_1M}}/g, dateFuture1M)
+      .replace(/{{DATE_FUTURE_3M}}/g, dateFuture3M)
+      .replace(/{{DATE_FUTURE_6M}}/g, dateFuture6M);
   };
 
   // Create the initial report content (template with patient info)
@@ -88,7 +125,7 @@ export default function PatientRapportEditor({
             <p><strong>Âge:</strong> ${patient.age} ans</p>
           </div>
           <div>
-            <p><strong>Date:</strong> ${date}</p>
+            <p><strong>Date:</strong> ${formattedDate}</p>
             <p><strong>Référence:</strong> ${refId}</p>
           </div>
         </div>
@@ -127,7 +164,7 @@ export default function PatientRapportEditor({
           <p><strong>Âge:</strong> ${patient.age} ans</p>
         </div>
         <div>
-          <p><strong>Date:</strong> ${date}</p>
+          <p><strong>Date:</strong> ${formattedDate}</p>
           <p><strong>Référence:</strong> ${refId}</p>
         </div>
       </div>
@@ -183,7 +220,7 @@ export default function PatientRapportEditor({
     if (editor && !editor.isDestroyed) {
       editor.commands.setContent(createInitialContent());
     }
-  }, [patient, date, templateId]);
+  }, [patient, templateId]);
 
   return (
     <div className="print:shadow-none">
