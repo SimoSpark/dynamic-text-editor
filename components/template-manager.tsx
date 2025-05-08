@@ -1,9 +1,16 @@
+// components/template-manager.tsx
 "use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Save, Trash2, X } from "lucide-react";
+import { Plus, Save, Trash2, X, Info } from "lucide-react";
 import { addTemplate, getMedicalTemplates, removeTemplate } from "@/data/templates";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function TemplateManager() {
   const [templates, setTemplates] = useState(getMedicalTemplates());
@@ -11,9 +18,25 @@ export default function TemplateManager() {
   const [newTemplateName, setNewTemplateName] = useState("");
   const [newTemplateContent, setNewTemplateContent] = useState("");
 
+  // Liste des variables dynamiques disponibles
+  const dynamicVariables = [
+    { name: "{{DATE}}", description: "Date actuelle au format local" },
+    { name: "{{DATE_SHORT}}", description: "Date au format court (JJ/MM/AAAA)" },
+    { name: "{{HEURE}}", description: "Heure actuelle" },
+    { name: "{{PATIENT_NOM}}", description: "Nom du patient" },
+    { name: "{{PATIENT_PRENOM}}", description: "Prénom du patient" },
+    { name: "{{PATIENT_AGE}}", description: "Âge du patient" },
+    { name: "{{REF_ID}}", description: "Numéro de référence unique" }
+  ];
+
   // Refresh templates list
   const refreshTemplates = () => {
     setTemplates(getMedicalTemplates());
+  };
+
+  // Insert dynamic variable into template content
+  const insertVariable = (variable: string) => {
+    setNewTemplateContent(prev => prev + " " + variable + " ");
   };
 
   // Handle creating a new template
@@ -108,9 +131,48 @@ export default function TemplateManager() {
                 value={newTemplateContent}
                 onChange={(e) => setNewTemplateContent(e.target.value)}
               />
-              <p className="text-xs text-slate-500 mt-1">
-                Utilisez pour insérer la date actuelle. Les informations du patient seront automatiquement ajoutées.
-              </p>
+              
+              {/* Variables dynamiques */}
+              <div className="mt-3 border-t pt-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="text-sm font-medium">Variables disponibles</h4>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="sm" className="p-0 h-auto">
+                          <Info className="size-4 text-slate-500" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">Cliquez sur une variable pour l'insérer dans votre modèle</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  {dynamicVariables.map((variable) => (
+                    <TooltipProvider key={variable.name}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            type="button"
+                            variant="outline" 
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => insertVariable(variable.name)}
+                          >
+                            {variable.name}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">{variable.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
+                </div>
+              </div>
             </div>
             
             <div className="flex justify-end">

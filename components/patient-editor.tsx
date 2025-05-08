@@ -1,4 +1,4 @@
-//The medical report editor
+// components/patient-editor.tsx
 "use client";
 
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -15,25 +15,62 @@ interface PatientRapportEditorProps {
   patient: Patient;
   onChange: (content: string) => void;
   templateId?: string;
+  doctor?: string; // Optional doctor name
 }
 
 export default function PatientRapportEditor({
   patient,
   onChange,
   templateId = "default",
+  doctor,
 }: PatientRapportEditorProps) {
   const [date, setDate] = useState<string>("");
+  const [shortDate, setShortDate] = useState<string>("");
+  const [currentTime, setCurrentTime] = useState<string>("");
+  const [refId, setRefId] = useState<string>("");
 
   useEffect(() => {
     // Format current date
     const now = new Date();
+    
+    // Full date format
     const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
     };
     setDate(now.toLocaleDateString('fr-FR', options));
-  }, []);
+    
+    // Short date format
+    setShortDate(now.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }));
+    
+    // Time format
+    setCurrentTime(now.toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    }));
+    
+    // Generate reference ID
+    const randomId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    setRefId(`RM-${patient.id}-${randomId}-${now.getFullYear()}`);
+  }, [patient.id]);
+
+  // Process template and replace variables
+  const processTemplate = (templateContent: string): string => {
+    // Replace all dynamic variables in the template
+    return templateContent
+      .replace(/{{DATE}}/g, date)
+      .replace(/{{DATE_SHORT}}/g, shortDate)
+      .replace(/{{HEURE}}/g, currentTime)
+      .replace(/{{PATIENT_NOM}}/g, patient.nom)
+      .replace(/{{PATIENT_PRENOM}}/g, patient.prenom)
+      .replace(/{{PATIENT_AGE}}/g, patient.age.toString())
+      .replace(/{{REF_ID}}/g, refId);
+  };
 
   // Create the initial report content (template with patient info)
   const createInitialContent = () => {
@@ -52,23 +89,23 @@ export default function PatientRapportEditor({
           </div>
           <div>
             <p><strong>Date:</strong> ${date}</p>
-            <p><strong>Référence:</strong> RM-${patient.id}-${new Date().getFullYear()}</p>
+            <p><strong>Référence:</strong> ${refId}</p>
           </div>
         </div>
         
         <h2>Description médicale</h2>
         <div style="padding: 10px; background-color: #f8f8f8; border-radius: 5px; margin-bottom: 20px;">
-          ${patient.description}
+          ${patient.description || "Aucune description fournie"}
         </div>
         
         <h2>Conseils et prescriptions</h2>
         <div style="padding: 10px; background-color: #f8f8f8; border-radius: 5px; margin-bottom: 20px;">
-          ${patient.conseils}
+          ${patient.conseils || "Ajoutez vos conseils et prescriptions ici"}
         </div>
         
         <div style="margin-top: 40px;">
-          <p><strong>Médecin:</strong> Dr ti7rt</p>
-          <p><strong>Signature:</strong> ti7rt ahmed </p>
+          <p><strong>Médecin:</strong> ${doctor || "Dr. ________"}</p>
+          <p><strong>Signature:</strong> ________________ </p>
         </div>
         
         <div style="margin-top: 30px; font-size: 0.8em; color: #666; text-align: center;">
@@ -78,10 +115,9 @@ export default function PatientRapportEditor({
     }
     
     // Apply template with patient information
-    let templateContent = selectedTemplate.content
-      .replace(/{{DATE}}/g, date);
+    let templateContent = processTemplate(selectedTemplate.content);
     
-    // Add the standard patient header and footer to the template
+    // Add the standard patient header and footer
     return `
       <h1 style="text-align: center;">RAPPORT MÉDICAL</h1>
       
@@ -92,15 +128,15 @@ export default function PatientRapportEditor({
         </div>
         <div>
           <p><strong>Date:</strong> ${date}</p>
-          <p><strong>Référence:</strong> RM-${patient.id}-${new Date().getFullYear()}</p>
+          <p><strong>Référence:</strong> ${refId}</p>
         </div>
       </div>
       
       ${templateContent}
       
       <div style="margin-top: 40px;">
-        <p><strong>Médecin:</strong> Dr ti7rt</p>
-        <p><strong>Signature:</strong> ti7rt ahmed </p>
+        <p><strong>Médecin:</strong> ${doctor || "Dr. ________"}</p>
+        <p><strong>Signature:</strong> ________________ </p>
       </div>
       
       <div style="margin-top: 30px; font-size: 0.8em; color: #666; text-align: center;">
