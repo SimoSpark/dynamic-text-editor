@@ -364,9 +364,85 @@ import {
           </DropdownMenu>
         )}
   
-       
-      
-        
+        {/* Dropdown pour insérer la date */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-sm"
+            >
+              <Calendar className="size-4" /> 
+              Date
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => insertDate("full")}>
+              Date complète
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => insertDate("short")}>
+              Date courte
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => insertDate("withTime")}>
+              Date et heure
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Dropdown pour insérer la signature du médecin */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-sm"
+            >
+              <FileSignature className="size-4" /> 
+              Signature
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => insertDoctorSignature("dr1")}>
+              Dr. Martin Dupont
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => insertDoctorSignature("dr2")}>
+              Dr. Sophie Laurent
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => insertDoctorSignature("dr3")}>
+              Dr. Thomas Moreau
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => insertDoctorSignature("dr4")}>
+              Dr. Emma Petit
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Dropdown pour insérer des informations sur le patient */}
+        {patient && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1 text-sm"
+              >
+                <User className="size-4" /> 
+                Patient
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => insertPatientInfo("basic")}>
+                Informations de base
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => insertPatientInfo("description")}>
+                Description médicale
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => insertPatientInfo("advice")}>
+                Conseils précédents
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     );
   }
