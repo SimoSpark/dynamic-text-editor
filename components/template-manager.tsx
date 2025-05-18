@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Save, Trash2, X, Info, CalendarDays, MessageSquare, User, Stethoscope } from "lucide-react";
-import { addTemplate, getMedicalTemplates, removeTemplate } from "@/data/templates";
 import {
   Tabs,
   TabsContent,
@@ -17,8 +16,47 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+// Define the template interface
+interface Template {
+  id: string;
+  name: string;
+  content: string;
+}
+
+// These functions should be implemented in your data/templates.js file
+// I'm creating placeholders here for clarity
+const getMedicalTemplates = (): Template[] => {
+  try {
+    const templatesJson = localStorage.getItem('medicalTemplates');
+    return templatesJson ? JSON.parse(templatesJson) : [];
+  } catch (error) {
+    console.error("Error loading templates:", error);
+    return [];
+  }
+};
+
+const addTemplate = (template: Template): void => {
+  try {
+    const templates = getMedicalTemplates();
+    templates.push(template);
+    localStorage.setItem('medicalTemplates', JSON.stringify(templates));
+  } catch (error) {
+    console.error("Error saving template:", error);
+  }
+};
+
+const removeTemplate = (id: string): void => {
+  try {
+    const templates = getMedicalTemplates();
+    const filteredTemplates = templates.filter(t => t.id !== id);
+    localStorage.setItem('medicalTemplates', JSON.stringify(filteredTemplates));
+  } catch (error) {
+    console.error("Error removing template:", error);
+  }
+};
+
 export default function TemplateManager() {
-  const [templates, setTemplates] = useState(getMedicalTemplates());
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState("");
   const [newTemplateContent, setNewTemplateContent] = useState("");
@@ -43,7 +81,7 @@ export default function TemplateManager() {
     const now = new Date();
     
     // Full date format
-    const options = { 
+    const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
@@ -325,11 +363,6 @@ export default function TemplateManager() {
     }
   };
 
-  // Preview the template with the visible values already showing
-  const getPreviewContent = () => {
-    return newTemplateContent;
-  };
-
   return (
     <div className="border rounded-md p-4 mb-6">
       <div className="flex justify-between items-center mb-4">
@@ -382,6 +415,7 @@ export default function TemplateManager() {
             >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="editor">Éditeur</TabsTrigger>
+                <TabsTrigger value="preview">Aperçu</TabsTrigger>
               </TabsList>
               
               <TabsContent value="editor" className="border rounded-md p-4">
@@ -491,7 +525,10 @@ export default function TemplateManager() {
                 </Accordion>
               </TabsContent>
               
-             
+              <TabsContent value="preview" className="border rounded-md p-4">
+                <div className="bg-white p-4 border rounded-md min-h-[200px]"
+                     dangerouslySetInnerHTML={{ __html: newTemplateContent }} />
+              </TabsContent>
             </Tabs>
             
             <div className="flex justify-end">
