@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Patient } from "@/types/patient";
-import { getPatientById } from "@/data/patients";
+import { getPatientById, updatePatient } from "@/data/patients";
 import PatientRapportEditor from "@/components/patient-editor";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Printer, PenSquare } from "lucide-react";
@@ -75,8 +75,18 @@ export default function PatientPage() {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save report');
+        const errorText = await response.text();
+        let errorMessage = 'Failed to save report';
+        
+        // Try to parse the error as JSON, but if it fails, use the text
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `Server error: ${response.status}`;
+        }
+        
+        throw new Error(errorMessage);
       }
       
       const updatedPatient = await response.json();
@@ -85,7 +95,8 @@ export default function PatientPage() {
       setPatient(prev => prev ? {...prev, rapport} : null);
       
       // For compatibility with the existing code, also update the local data
-      updatePatient({...patient, rapport});
+      const updatedLocalPatient = {...patient, rapport};
+      updatePatient(updatedLocalPatient);
       
       alert("Le rapport médical a été enregistré.");
     } catch (error) {
@@ -93,25 +104,6 @@ export default function PatientPage() {
       alert(`Erreur lors de l'enregistrement du rapport: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setSaving(false);
-    }
-  };
-  
-  // This function is needed to maintain compatibility with your existing code
-  const updatePatient = (updatedPatient: Patient) => {
-    try {
-      // Get the patients array from localStorage or create empty array
-      const storedPatients = localStorage.getItem('patients');
-      const patients = storedPatients ? JSON.parse(storedPatients) : [];
-      
-      // Find and update the patient in the array
-      const updatedPatients = patients.map((p: Patient) => 
-        p.id === updatedPatient.id ? updatedPatient : p
-      );
-      
-      // Save updated patients array back to localStorage
-      localStorage.setItem('patients', JSON.stringify(updatedPatients));
-    } catch (error) {
-      console.error("Error updating patient in local storage:", error);
     }
   };
   

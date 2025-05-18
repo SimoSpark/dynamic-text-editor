@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -40,6 +39,55 @@ export async function GET(
     console.error('Error fetching patient reports:', error);
     return NextResponse.json(
       { error: 'Failed to fetch patient reports' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT/PATCH to update patient rapport
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const patientId = parseInt(params.id);
+    
+    if (isNaN(patientId)) {
+      return NextResponse.json(
+        { error: 'Invalid patient ID' },
+        { status: 400 }
+      );
+    }
+    
+    const body = await request.json();
+    const { rapport } = body;
+    
+    // Validate required fields
+    if (!rapport && rapport !== '') {
+      return NextResponse.json(
+        { error: 'Missing rapport content' },
+        { status: 400 }
+      );
+    }
+    
+    // Check if patient exists and update rapport
+    const updatedPatient = await prisma.patient.update({
+      where: { id: patientId },
+      data: { rapport },
+    });
+    
+    if (!updatedPatient) {
+      return NextResponse.json(
+        { error: 'Failed to update patient rapport' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(updatedPatient);
+  } catch (error) {
+    console.error('Error updating patient rapport:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to update patient rapport' },
       { status: 500 }
     );
   }
@@ -97,55 +145,6 @@ export async function POST(
     console.error('Error creating patient report:', error);
     return NextResponse.json(
       { error: 'Failed to create patient report' },
-      { status: 500 }
-    );
-  }
-}
-
-// PUT/PATCH to update patient rapport
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const patientId = parseInt(params.id);
-    
-    if (isNaN(patientId)) {
-      return NextResponse.json(
-        { error: 'Invalid patient ID' },
-        { status: 400 }
-      );
-    }
-    
-    const body = await request.json();
-    const { rapport } = body;
-    
-    // Validate required fields
-    if (!rapport) {
-      return NextResponse.json(
-        { error: 'Missing rapport content' },
-        { status: 400 }
-      );
-    }
-    
-    // Check if patient exists and update rapport
-    const updatedPatient = await prisma.patient.update({
-      where: { id: patientId },
-      data: { rapport },
-    });
-    
-    if (!updatedPatient) {
-      return NextResponse.json(
-        { error: 'Failed to update patient rapport' },
-        { status: 404 }
-      );
-    }
-    
-    return NextResponse.json(updatedPatient);
-  } catch (error) {
-    console.error('Error updating patient rapport:', error);
-    return NextResponse.json(
-      { error: 'Failed to update patient rapport' },
       { status: 500 }
     );
   }
