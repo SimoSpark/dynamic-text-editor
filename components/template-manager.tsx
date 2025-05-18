@@ -24,24 +24,140 @@ export default function TemplateManager() {
   const [newTemplateContent, setNewTemplateContent] = useState("");
   const [selectedTab, setSelectedTab] = useState("editor");
 
-  // Blocs de contenus prédéfinis
+  // Current date values for preview and insertion
+  const [currentDateValues, setCurrentDateValues] = useState({
+    date: "",
+    dateShort: "",
+    heure: "",
+    jourSemaine: "",
+    dateFuture1W: "",
+    dateFuture2W: "",
+    dateFuture1M: "",
+    dateFuture3M: "",
+    dateFuture6M: "",
+  });
+
+  // Generate real date values
+  useEffect(() => {
+    // Format current date
+    const now = new Date();
+    
+    // Full date format
+    const options = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    
+    // Day of week
+    const joursSemaine = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    
+    // Future dates
+    const oneWeek = new Date(now);
+    oneWeek.setDate(now.getDate() + 7);
+    
+    const twoWeeks = new Date(now);
+    twoWeeks.setDate(now.getDate() + 14);
+    
+    const oneMonth = new Date(now);
+    oneMonth.setMonth(now.getMonth() + 1);
+    
+    const threeMonths = new Date(now);
+    threeMonths.setMonth(now.getMonth() + 3);
+    
+    const sixMonths = new Date(now);
+    sixMonths.setMonth(now.getMonth() + 6);
+    
+    setCurrentDateValues({
+      date: now.toLocaleDateString('fr-FR', options),
+      dateShort: now.toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }),
+      heure: now.toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      jourSemaine: joursSemaine[now.getDay()],
+      dateFuture1W: oneWeek.toLocaleDateString('fr-FR', options),
+      dateFuture2W: twoWeeks.toLocaleDateString('fr-FR', options),
+      dateFuture1M: oneMonth.toLocaleDateString('fr-FR', options),
+      dateFuture3M: threeMonths.toLocaleDateString('fr-FR', options),
+      dateFuture6M: sixMonths.toLocaleDateString('fr-FR', options),
+    });
+  }, []);
+
+  // Blocs de contenus prédéfinis avec variables et valeurs réelles
   const contentBlocks = {
     dates: [
-      { label: "Date d'aujourd'hui", value: "{{DATE}}" },
-      { label: "Date courte (JJ/MM/AAAA)", value: "{{DATE_SHORT}}" },
-      { label: "Heure actuelle", value: "{{HEURE}}" },
-      { label: "Dans une semaine", value: "{{DATE_FUTURE_1W}}" },
-      { label: "Dans deux semaines", value: "{{DATE_FUTURE_2W}}" },
-      { label: "Dans un mois", value: "{{DATE_FUTURE_1M}}" },
-      { label: "Dans 3 mois", value: "{{DATE_FUTURE_3M}}" },
-      { label: "Dans 6 mois", value: "{{DATE_FUTURE_6M}}" },
-      { label: "Jour de la semaine", value: "{{JOUR_SEMAINE}}" },
+      { 
+        label: "Date d'aujourd'hui", 
+        value: "{{DATE}}", 
+        realValue: currentDateValues.date
+      },
+      { 
+        label: "Date courte (JJ/MM/AAAA)", 
+        value: "{{DATE_SHORT}}", 
+        realValue: currentDateValues.dateShort
+      },
+      { 
+        label: "Heure actuelle", 
+        value: "{{HEURE}}", 
+        realValue: currentDateValues.heure
+      },
+      { 
+        label: "Dans une semaine", 
+        value: "{{DATE_FUTURE_1W}}", 
+        realValue: currentDateValues.dateFuture1W
+      },
+      { 
+        label: "Dans deux semaines", 
+        value: "{{DATE_FUTURE_2W}}", 
+        realValue: currentDateValues.dateFuture2W
+      },
+      { 
+        label: "Dans un mois", 
+        value: "{{DATE_FUTURE_1M}}", 
+        realValue: currentDateValues.dateFuture1M
+      },
+      { 
+        label: "Dans 3 mois", 
+        value: "{{DATE_FUTURE_3M}}", 
+        realValue: currentDateValues.dateFuture3M
+      },
+      { 
+        label: "Dans 6 mois", 
+        value: "{{DATE_FUTURE_6M}}", 
+        realValue: currentDateValues.dateFuture6M
+      },
+      { 
+        label: "Jour de la semaine", 
+        value: "{{JOUR_SEMAINE}}", 
+        realValue: currentDateValues.jourSemaine
+      },
     ],
     patient: [
-      { label: "Nom du patient", value: "{{PATIENT_NOM}}" },
-      { label: "Prénom du patient", value: "{{PATIENT_PRENOM}}" },
-      { label: "Âge du patient", value: "{{PATIENT_AGE}}" },
-      { label: "Numéro de dossier", value: "{{REF_ID}}" },
+      { 
+        label: "Nom du patient", 
+        value: "{{PATIENT_NOM}}", 
+        realValue: "Dupont" 
+      },
+      { 
+        label: "Prénom du patient", 
+        value: "{{PATIENT_PRENOM}}", 
+        realValue: "Jean" 
+      },
+      { 
+        label: "Âge du patient", 
+        value: "{{PATIENT_AGE}}", 
+        realValue: "45" 
+      },
+      { 
+        label: "Numéro de dossier", 
+        value: "{{REF_ID}}", 
+        realValue: "RM-1234-5678-2025" 
+      },
     ],
     advice: [
       { 
@@ -138,31 +254,28 @@ export default function TemplateManager() {
     setTemplates(getMedicalTemplates());
   };
 
-  // Insert element directly into template content
-  const insertContent = (content: string) => {
-    setNewTemplateContent(prev => prev + content);
+  // Insert visible content but maintain template functionality
+  const insertDateVariable = (date: { label: string, value: string, realValue: string }) => {
+    // Insérer une combinaison de valeur visible et variable fonctionnelle
+    const insertText = `<span data-variable="${date.value}">${date.realValue}</span>`;
+    setNewTemplateContent(prev => prev + insertText);
   };
 
-  // Insert a date variable directly
-  const insertDateVariable = (date: { label: string, value: string }) => {
-    // Insert the actual variable value directly - no spans
-    insertContent(date.value);
-  };
-
-  // Insert a patient info variable directly
-  const insertPatientVariable = (info: { label: string, value: string }) => {
-    // Insert the actual variable value directly - no spans
-    insertContent(info.value);
+  // Insert patient info with actual example but maintain template functionality
+  const insertPatientVariable = (info: { label: string, value: string, realValue: string }) => {
+    // Insérer une combinaison de valeur visible et variable fonctionnelle
+    const insertText = `<span data-variable="${info.value}">${info.realValue}</span>`;
+    setNewTemplateContent(prev => prev + insertText);
   };
 
   // Insert advice block
   const insertAdvice = (advice: { title: string, content: string }) => {
-    insertContent(advice.content);
+    setNewTemplateContent(prev => prev + advice.content);
   };
 
   // Insert section block
   const insertSection = (section: { title: string, content: string }) => {
-    insertContent(section.content);
+    setNewTemplateContent(prev => prev + section.content);
   };
 
   // Handle creating a new template
@@ -178,11 +291,20 @@ export default function TemplateManager() {
       .replace(/\s+/g, "-")
       .replace(/[^\w-]/g, "");
 
+    // Process the template content to convert spans to variables
+    let processedContent = newTemplateContent;
+    
+    // Replace all spans with data-variable with their actual variable code
+    const spanRegex = /<span data-variable="(.*?)">(.*?)<\/span>/g;
+    processedContent = processedContent.replace(spanRegex, (match, variable) => {
+      return variable;
+    });
+
     // Create template with basic structure
     const template = {
       id: templateId,
       name: newTemplateName,
-      content: newTemplateContent
+      content: processedContent
     };
 
     // Add template to storage
@@ -203,31 +325,9 @@ export default function TemplateManager() {
     }
   };
 
-  // Preview the template with sample data
+  // Preview the template with the visible values already showing
   const getPreviewContent = () => {
-    let previewContent = newTemplateContent;
-    
-    // Replace variables with preview values
-    // Date variables
-    previewContent = previewContent
-      .replace(/{{DATE}}/g, "8 mai 2025")
-      .replace(/{{DATE_SHORT}}/g, "08/05/2025")
-      .replace(/{{HEURE}}/g, "14:30")
-      .replace(/{{DATE_FUTURE_1W}}/g, "15 mai 2025")
-      .replace(/{{DATE_FUTURE_2W}}/g, "22 mai 2025")
-      .replace(/{{DATE_FUTURE_1M}}/g, "8 juin 2025")
-      .replace(/{{DATE_FUTURE_3M}}/g, "8 août 2025")
-      .replace(/{{DATE_FUTURE_6M}}/g, "8 novembre 2025")
-      .replace(/{{JOUR_SEMAINE}}/g, "Jeudi");
-    
-    // Patient variables
-    previewContent = previewContent
-      .replace(/{{PATIENT_NOM}}/g, "Dupont")
-      .replace(/{{PATIENT_PRENOM}}/g, "Jean")
-      .replace(/{{PATIENT_AGE}}/g, "45")
-      .replace(/{{REF_ID}}/g, "RM-1234-5678-2025");
-    
-    return previewContent;
+    return newTemplateContent;
   };
 
   return (
@@ -295,7 +395,7 @@ export default function TemplateManager() {
                 
                 {/* Aide pour les variables disponibles */}
                 <div className="mb-2 p-2 bg-blue-50 rounded border border-blue-100 text-sm">
-                  <p><strong>Astuce :</strong> Pour insérer des variables, utilisez les boutons ci-dessous. Les variables seront remplacées par les vraies informations lors de la création du rapport.</p>
+                  <p><strong>Astuce :</strong> Utilisez les boutons ci-dessous pour insérer des variables dynamiques. Vous verrez les valeurs d'exemple affichées directement dans l'éditeur.</p>
                 </div>
                 
                 {/* Éléments disponibles */}
@@ -316,7 +416,7 @@ export default function TemplateManager() {
                           >
                             <span className="flex justify-between w-full">
                               <span>{date.label}</span>
-                              <span className="text-xs text-blue-600 font-mono">{date.value}</span>
+                              <span className="text-xs text-blue-600">{date.realValue}</span>
                             </span>
                           </Button>
                         ))}
@@ -340,7 +440,7 @@ export default function TemplateManager() {
                           >
                             <span className="flex justify-between w-full">
                               <span>{info.label}</span>
-                              <span className="text-xs text-green-600 font-mono">{info.value}</span>
+                              <span className="text-xs text-green-600">{info.realValue}</span>
                             </span>
                           </Button>
                         ))}
@@ -399,7 +499,7 @@ export default function TemplateManager() {
                 />
                 <div className="flex justify-between items-center mt-2">
                   <p className="text-xs text-slate-500">
-                    Ceci est un aperçu avec des données d'exemple. Les variables seront remplacées par les informations réelles du patient lors de l'utilisation.
+                    Ceci est un aperçu avec des données d'exemple. Les variables seront automatiquement remplacées pour chaque patient.
                   </p>
                   <Button
                     variant="outline"
