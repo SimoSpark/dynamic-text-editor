@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Patient } from "@/types/patient";
-import { getPatientById, updatePatient } from "@/data/patients";
+import { getPatientById } from "@/data/patients";
 import PatientRapportEditor from "@/components/patient-editor";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Printer, PenSquare } from "lucide-react";
@@ -16,6 +16,7 @@ export default function PatientPage() {
   const router = useRouter();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [rapport, setRapport] = useState("");
   const [templates, setTemplates] = useState<any[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("default");
@@ -23,16 +24,30 @@ export default function PatientPage() {
 
   // Loads patient details by ID
   useEffect(() => {
-    const patientId = Number(params.id);
-    const patientData = getPatientById(patientId);
+    const fetchPatient = async () => {
+      try {
+        const patientId = Number(params.id);
+        // First try to load from local data (for compatibility)
+        const patientData = getPatientById(patientId);
+        
+        if (patientData) {
+          setPatient(patientData);
+          // If there's saved rapport content in the patient data, use it
+          if (patientData.rapport) {
+            setRapport(patientData.rapport);
+          }
+        }
+        
+        // Load available templates
+        refreshTemplates();
+      } catch (error) {
+        console.error("Error loading patient:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    if (patientData) {
-      setPatient(patientData);
-    }
-    
-    // Load available templates
-    refreshTemplates();
-    setLoading(false);
+    fetchPatient();
   }, [params.id]);
 
   // Refresh templates list
@@ -44,10 +59,59 @@ export default function PatientPage() {
     router.push("/patients");
   };
 
-  const handleSave = () => {
-    if (patient) {
+  const handleSave = async () => {
+    if (!patient) return;
+    
+    try {
+      setSaving(true);
+      
+      // Make API request to save the rapport
+      const response = await fetch(`/api/patients/${patient.id}/reports`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rapport }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save report');
+      }
+      
+      const updatedPatient = await response.json();
+      
+      // Update local state with the saved patient data
+      setPatient(prev => prev ? {...prev, rapport} : null);
+      
+      // For compatibility with the existing code, also update the local data
       updatePatient({...patient, rapport});
+      
       alert("Le rapport médical a été enregistré.");
+    } catch (error) {
+      console.error("Error saving report:", error);
+      alert(`Erreur lors de l'enregistrement du rapport: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  // This function is needed to maintain compatibility with your existing code
+  const updatePatient = (updatedPatient: Patient) => {
+    try {
+      // Get the patients array from localStorage or create empty array
+      const storedPatients = localStorage.getItem('patients');
+      const patients = storedPatients ? JSON.parse(storedPatients) : [];
+      
+      // Find and update the patient in the array
+      const updatedPatients = patients.map((p: Patient) => 
+        p.id === updatedPatient.id ? updatedPatient : p
+      );
+      
+      // Save updated patients array back to localStorage
+      localStorage.setItem('patients', JSON.stringify(updatedPatients));
+    } catch (error) {
+      console.error("Error updating patient in local storage:", error);
     }
   };
   
@@ -96,9 +160,10 @@ export default function PatientPage() {
         <div className="flex items-center gap-2">
           <Button 
             onClick={handleSave}
+            disabled={saving}
             className="flex items-center gap-2"
           >
-            <Save className="size-4" /> Enregistrer
+            <Save className="size-4" /> {saving ? 'Sauvegarde en cours...' : 'Enregistrer'}
           </Button>
           <Button 
             variant="outline" 
@@ -154,6 +219,7 @@ export default function PatientPage() {
           patient={patient} 
           onChange={handleRapportChange}
           templateId={selectedTemplate}
+          initialContent={patient.rapport}
         />
       </div>
     </div>

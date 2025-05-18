@@ -1,6 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,11 +11,12 @@ datasource db {
 
 model Patient {
   id          Int      @id @default(autoincrement())
-  prenom      String
   nom         String
+  prenom      String
   age         Int
   description String?
   conseils    String?
+  rapport     String?  @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   reports     Report[]
@@ -25,9 +25,9 @@ model Patient {
 model Report {
   id        Int      @id @default(autoincrement())
   title     String
-  content   String
+  content   String   @db.Text
+  patientId Int
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  patient   Patient  @relation(fields: [patientId], references: [id])
-  patientId Int
 }

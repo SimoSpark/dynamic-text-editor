@@ -382,7 +382,6 @@ export default function TemplateManager() {
             >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="editor">Éditeur</TabsTrigger>
-                <TabsTrigger value="preview">Aperçu</TabsTrigger>
               </TabsList>
               
               <TabsContent value="editor" className="border rounded-md p-4">
@@ -492,24 +491,7 @@ export default function TemplateManager() {
                 </Accordion>
               </TabsContent>
               
-              <TabsContent value="preview" className="border rounded-md p-4">
-                <div 
-                  className="min-h-[200px] p-4 border rounded-md bg-white"
-                  dangerouslySetInnerHTML={{ __html: getPreviewContent() }}
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-xs text-slate-500">
-                    Ceci est un aperçu avec des données d'exemple. Les variables seront automatiquement remplacées pour chaque patient.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedTab("editor")}
-                  >
-                    Retour à l'éditeur
-                  </Button>
-                </div>
-              </TabsContent>
+             
             </Tabs>
             
             <div className="flex justify-end">

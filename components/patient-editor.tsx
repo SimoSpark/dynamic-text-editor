@@ -15,6 +15,7 @@ interface PatientRapportEditorProps {
   onChange: (content: string) => void;
   templateId?: string;
   doctor?: string;
+  initialContent?: string;
 }
 
 export default function PatientRapportEditor({
@@ -22,6 +23,7 @@ export default function PatientRapportEditor({
   onChange,
   templateId = "default",
   doctor,
+  initialContent,
 }: PatientRapportEditorProps) {
   const [formattedDate, setFormattedDate] = useState<string>("");
   const [shortDate, setShortDate] = useState<string>("");
@@ -111,6 +113,11 @@ export default function PatientRapportEditor({
 
   // Create the initial report content (template with patient info)
   const createInitialContent = () => {
+    // If initialContent is provided, use it
+    if (initialContent) {
+      return initialContent;
+    }
+    
     // Get the selected template or use default
     const selectedTemplate = getTemplateById(templateId);
     
@@ -215,12 +222,12 @@ export default function PatientRapportEditor({
     },
   });
 
-  // Update content when the patient or template changes
+  // Update content when the patient or template changes, but only if there's no initialContent
   useEffect(() => {
-    if (editor && !editor.isDestroyed) {
+    if (editor && !editor.isDestroyed && templateId && !initialContent) {
       editor.commands.setContent(createInitialContent());
     }
-  }, [patient, templateId]);
+  }, [patient, templateId, initialContent]);
 
   return (
     <div className="print:shadow-none">
