@@ -62,7 +62,7 @@ export default function MenuBar({ editor, patient }: MenuBarProps) {
     }
 
     editor.commands.insertContent(advice);
-    // Focus l'éditeur après insertion
+   
     editor.commands.focus();
   };
 
@@ -141,7 +141,7 @@ export default function MenuBar({ editor, patient }: MenuBarProps) {
         </Toggle>
       ))}
 
-      {/* Dropdown pour les conseils dynamiques - seulement visible si un patient est fourni */}
+      {/* Dropdown pour les conseils dynamiques */}
       {patient && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
