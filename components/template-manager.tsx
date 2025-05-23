@@ -16,7 +16,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-// Define the template interface
+// template interface
 interface Template {
   id: string;
   name: string;
@@ -24,7 +24,7 @@ interface Template {
 }
 
 // These functions should be implemented in your data/templates.js file
-// I'm creating placeholders here for clarity
+ creating placeholders here for clarity
 const getMedicalTemplates = (): Template[] => {
   try {
     const templatesJson = localStorage.getItem('medicalTemplates');
@@ -77,7 +77,7 @@ export default function TemplateManager() {
 
   // Generate real date values
   useEffect(() => {
-    // Format current date
+   
     const now = new Date();
     
     // Full date format
