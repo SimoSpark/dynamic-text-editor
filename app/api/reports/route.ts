@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// GET patient reports
+//  Get all reports for a specific patient
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -44,7 +44,7 @@ export async function GET(
   }
 }
 
-// PUT/PATCH to update patient rapport
+// PUT - Update a patient's rapport (this is likely what you need)
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -63,7 +63,7 @@ export async function PUT(
     const { rapport } = body;
     
     // Validate required fields
-    if (!rapport && rapport !== '') {
+    if (rapport === undefined) {
       return NextResponse.json(
         { error: 'Missing rapport content' },
         { status: 400 }
@@ -76,13 +76,6 @@ export async function PUT(
       data: { rapport },
     });
     
-    if (!updatedPatient) {
-      return NextResponse.json(
-        { error: 'Failed to update patient rapport' },
-        { status: 404 }
-      );
-    }
-    
     return NextResponse.json(updatedPatient);
   } catch (error) {
     console.error('Error updating patient rapport:', error);
@@ -93,7 +86,7 @@ export async function PUT(
   }
 }
 
-// POST a new report for a patient
+// POST - Create a new report for a patient
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }

@@ -1,61 +1,15 @@
-"use client";
-
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Plus, Save, Trash2, X, Info, CalendarDays, MessageSquare, User, Stethoscope } from "lucide-react";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Plus, Save, Trash2, X, CalendarDays, MessageSquare, User, Stethoscope } from "lucide-react";
 
-// Define the template interface
+// Template interface
 interface Template {
   id: string;
   name: string;
   content: string;
 }
 
-// These functions should be implemented in your data/templates.js file
-// I'm creating placeholders here for clarity
-const getMedicalTemplates = (): Template[] => {
-  try {
-    const templatesJson = localStorage.getItem('medicalTemplates');
-    return templatesJson ? JSON.parse(templatesJson) : [];
-  } catch (error) {
-    console.error("Error loading templates:", error);
-    return [];
-  }
-};
-
-const addTemplate = (template: Template): void => {
-  try {
-    const templates = getMedicalTemplates();
-    templates.push(template);
-    localStorage.setItem('medicalTemplates', JSON.stringify(templates));
-  } catch (error) {
-    console.error("Error saving template:", error);
-  }
-};
-
-const removeTemplate = (id: string): void => {
-  try {
-    const templates = getMedicalTemplates();
-    const filteredTemplates = templates.filter(t => t.id !== id);
-    localStorage.setItem('medicalTemplates', JSON.stringify(filteredTemplates));
-  } catch (error) {
-    console.error("Error removing template:", error);
-  }
-};
-
 export default function TemplateManager() {
+  // Using React state instead of localStorage
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState("");
@@ -77,7 +31,6 @@ export default function TemplateManager() {
 
   // Generate real date values
   useEffect(() => {
-    // Format current date
     const now = new Date();
     
     // Full date format
@@ -126,7 +79,7 @@ export default function TemplateManager() {
     });
   }, []);
 
-  // Blocs de contenus prédéfinis avec variables et valeurs réelles
+  // Content blocks with variables and real values
   const contentBlocks = {
     dates: [
       { 
@@ -282,26 +235,23 @@ export default function TemplateManager() {
     ]
   };
 
-  // Refresh templates list when component mounts
-  useEffect(() => {
-    refreshTemplates();
-  }, []);
-
-  // Refresh templates list
-  const refreshTemplates = () => {
-    setTemplates(getMedicalTemplates());
+  // Template management functions using React state
+  const addTemplate = (template: Template): void => {
+    setTemplates(prev => [...prev, template]);
   };
 
-  // Insert visible content but maintain template functionality
+  const removeTemplate = (id: string): void => {
+    setTemplates(prev => prev.filter(t => t.id !== id));
+  };
+
+  // Insert date variable
   const insertDateVariable = (date: { label: string, value: string, realValue: string }) => {
-    // Insérer une combinaison de valeur visible et variable fonctionnelle
     const insertText = `<span data-variable="${date.value}">${date.realValue}</span>`;
     setNewTemplateContent(prev => prev + insertText);
   };
 
-  // Insert patient info with actual example but maintain template functionality
+  // Insert patient variable
   const insertPatientVariable = (info: { label: string, value: string, realValue: string }) => {
-    // Insérer une combinaison de valeur visible et variable fonctionnelle
     const insertText = `<span data-variable="${info.value}">${info.realValue}</span>`;
     setNewTemplateContent(prev => prev + insertText);
   };
@@ -345,23 +295,80 @@ export default function TemplateManager() {
       content: processedContent
     };
 
-    // Add template to storage
+    // Add template to state
     addTemplate(template);
     
-    // Reset form and refresh list
+    // Reset form
     setNewTemplateName("");
     setNewTemplateContent("");
     setIsCreating(false);
-    refreshTemplates();
   };
 
   // Handle removing a template
   const handleRemoveTemplate = (id: string) => {
     if (confirm("Êtes-vous sûr de vouloir supprimer ce modèle?")) {
       removeTemplate(id);
-      refreshTemplates();
     }
   };
+
+  // Simple Accordion component
+  const Accordion = ({ children }: { children: React.ReactNode }) => (
+    <div className="w-full">{children}</div>
+  );
+
+  const AccordionItem = ({ value, children }: { value: string, children: React.ReactNode }) => (
+    <div className="border rounded-md mb-2">{children}</div>
+  );
+
+  const AccordionTrigger = ({ children, className }: { children: React.ReactNode, className?: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+      <div>
+        <button 
+          className={`w-full p-3 text-left hover:bg-gray-50 ${className}`}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {children}
+        </button>
+        {isOpen && (
+          <div className="p-3 border-t">
+            {/* Content will be rendered by AccordionContent */}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const AccordionContent = ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  );
+
+  // Simple Tabs component
+  const Tabs = ({ children, defaultValue, value, onValueChange }: { 
+    children: React.ReactNode, 
+    defaultValue: string,
+    value: string,
+    onValueChange: (value: string) => void
+  }) => (
+    <div className="w-full">{children}</div>
+  );
+
+  const TabsList = ({ children }: { children: React.ReactNode }) => (
+    <div className="flex border-b mb-4">{children}</div>
+  );
+
+  const TabsTrigger = ({ value, children }: { value: string, children: React.ReactNode }) => (
+    <button
+      className={`px-4 py-2 border-b-2 ${selectedTab === value ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
+      onClick={() => setSelectedTab(value)}
+    >
+      {children}
+    </button>
+  );
+
+  const TabsContent = ({ value, children, className }: { value: string, children: React.ReactNode, className?: string }) => (
+    selectedTab === value ? <div className={className}>{children}</div> : null
+  );
 
   return (
     <div className="border rounded-md p-4 mb-6">
@@ -369,13 +376,12 @@ export default function TemplateManager() {
         <h2 className="text-lg font-medium">Gestion des modèles</h2>
         
         {!isCreating && (
-          <Button 
+          <button 
             onClick={() => setIsCreating(true)}
-            className="flex items-center gap-2"
-            size="sm"
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
           >
             <Plus className="size-4" /> Nouveau modèle
-          </Button>
+          </button>
         )}
       </div>
 
@@ -384,13 +390,12 @@ export default function TemplateManager() {
         <div className="border rounded-md p-4 mb-4 bg-slate-50">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-md font-medium">Nouveau modèle</h3>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <button 
+              className="p-1 hover:bg-gray-200 rounded"
               onClick={() => setIsCreating(false)}
             >
               <X className="size-4" />
-            </Button>
+            </button>
           </div>
           
           <div className="space-y-4">
@@ -409,11 +414,10 @@ export default function TemplateManager() {
             
             <Tabs 
               defaultValue="editor" 
-              className="w-full"
               value={selectedTab}
               onValueChange={setSelectedTab}
             >
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList>
                 <TabsTrigger value="editor">Éditeur</TabsTrigger>
                 <TabsTrigger value="preview">Aperçu</TabsTrigger>
               </TabsList>
@@ -426,103 +430,107 @@ export default function TemplateManager() {
                   onChange={(e) => setNewTemplateContent(e.target.value)}
                 />
                 
-                {/* Aide pour les variables disponibles */}
+                {/* Help for available variables */}
                 <div className="mb-2 p-2 bg-blue-50 rounded border border-blue-100 text-sm">
                   <p><strong>Astuce :</strong> Utilisez les boutons ci-dessous pour insérer des variables dynamiques. Vous verrez les valeurs d'exemple affichées directement dans l'éditeur.</p>
                 </div>
                 
-                {/* Éléments disponibles */}
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="dates">
-                    <AccordionTrigger className="flex items-center gap-2 text-sm font-medium">
+                {/* Available elements */}
+                <div className="space-y-4">
+                  <div className="border rounded-md">
+                    <button 
+                      className="w-full p-3 text-left hover:bg-gray-50 flex items-center gap-2 text-sm font-medium"
+                      onClick={() => {}} // Toggle logic would go here
+                    >
                       <CalendarDays className="size-4" /> Insérer des dates
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-2 gap-2 my-2">
+                    </button>
+                    <div className="p-3 border-t">
+                      <div className="grid grid-cols-2 gap-2">
                         {contentBlocks.dates.map((date, index) => (
-                          <Button 
+                          <button 
                             key={index}
-                            variant="outline" 
-                            size="sm"
-                            className="justify-start text-left"
+                            className="p-2 border rounded text-left hover:bg-gray-50 text-sm"
                             onClick={() => insertDateVariable(date)}
                           >
-                            <span className="flex justify-between w-full">
+                            <div className="flex justify-between w-full">
                               <span>{date.label}</span>
                               <span className="text-xs text-blue-600">{date.realValue}</span>
-                            </span>
-                          </Button>
+                            </div>
+                          </button>
                         ))}
                       </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                    </div>
+                  </div>
                   
-                  <AccordionItem value="patient">
-                    <AccordionTrigger className="flex items-center gap-2 text-sm font-medium">
+                  <div className="border rounded-md">
+                    <button 
+                      className="w-full p-3 text-left hover:bg-gray-50 flex items-center gap-2 text-sm font-medium"
+                      onClick={() => {}} // Toggle logic would go here
+                    >
                       <User className="size-4" /> Informations patient
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-2 gap-2 my-2">
+                    </button>
+                    <div className="p-3 border-t">
+                      <div className="grid grid-cols-2 gap-2">
                         {contentBlocks.patient.map((info, index) => (
-                          <Button 
+                          <button 
                             key={index}
-                            variant="outline" 
-                            size="sm"
-                            className="justify-start text-left"
+                            className="p-2 border rounded text-left hover:bg-gray-50 text-sm"
                             onClick={() => insertPatientVariable(info)}
                           >
-                            <span className="flex justify-between w-full">
+                            <div className="flex justify-between w-full">
                               <span>{info.label}</span>
                               <span className="text-xs text-green-600">{info.realValue}</span>
-                            </span>
-                          </Button>
+                            </div>
+                          </button>
                         ))}
                       </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                    </div>
+                  </div>
                   
-                  <AccordionItem value="advice">
-                    <AccordionTrigger className="flex items-center gap-2 text-sm font-medium">
+                  <div className="border rounded-md">
+                    <button 
+                      className="w-full p-3 text-left hover:bg-gray-50 flex items-center gap-2 text-sm font-medium"
+                      onClick={() => {}} // Toggle logic would go here
+                    >
                       <MessageSquare className="size-4" /> Conseils prédéfinis
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-1 gap-2 my-2">
+                    </button>
+                    <div className="p-3 border-t">
+                      <div className="grid grid-cols-1 gap-2">
                         {contentBlocks.advice.map((advice, index) => (
-                          <Button 
+                          <button 
                             key={index}
-                            variant="outline" 
-                            size="sm"
-                            className="justify-start text-left"
+                            className="p-2 border rounded text-left hover:bg-gray-50 text-sm"
                             onClick={() => insertAdvice(advice)}
                           >
                             {advice.title}
-                          </Button>
+                          </button>
                         ))}
                       </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                    </div>
+                  </div>
                   
-                  <AccordionItem value="sections">
-                    <AccordionTrigger className="flex items-center gap-2 text-sm font-medium">
+                  <div className="border rounded-md">
+                    <button 
+                      className="w-full p-3 text-left hover:bg-gray-50 flex items-center gap-2 text-sm font-medium"
+                      onClick={() => {}} // Toggle logic would go here
+                    >
                       <Stethoscope className="size-4" /> Sections médicales
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="grid grid-cols-1 gap-2 my-2">
+                    </button>
+                    <div className="p-3 border-t">
+                      <div className="grid grid-cols-1 gap-2">
                         {contentBlocks.sections.map((section, index) => (
-                          <Button 
+                          <button 
                             key={index}
-                            variant="outline" 
-                            size="sm"
-                            className="justify-start text-left"
+                            className="p-2 border rounded text-left hover:bg-gray-50 text-sm"
                             onClick={() => insertSection(section)}
                           >
                             {section.title}
-                          </Button>
+                          </button>
                         ))}
                       </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
               
               <TabsContent value="preview" className="border rounded-md p-4">
@@ -532,12 +540,12 @@ export default function TemplateManager() {
             </Tabs>
             
             <div className="flex justify-end">
-              <Button 
+              <button 
                 onClick={handleCreateTemplate}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
               >
                 <Save className="size-4" /> Enregistrer le modèle
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -557,14 +565,12 @@ export default function TemplateManager() {
                 className="flex justify-between items-center p-2 border rounded-md mb-2 hover:bg-slate-50"
               >
                 <span>{template.name}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={() => handleRemoveTemplate(template.id)}
-                  className="text-destructive hover:text-destructive"
+                  className="p-1 text-red-600 hover:bg-red-50 rounded"
                 >
                   <Trash2 className="size-4" />
-                </Button>
+                </button>
               </div>
             ))}
           </div>

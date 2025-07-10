@@ -168,7 +168,7 @@ export default function MenuBar({ editor, patient }: MenuBarProps) {
               Conseil de régime
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => insertDynamicAdvice("exercise")}>
-              Conseil d'exercice
+              Conseil exercice
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => insertDynamicAdvice("custom")}>
               Conseil personnalisé

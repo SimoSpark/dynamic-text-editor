@@ -159,7 +159,7 @@ export default function PatientRapportEditor({
     }
     
     // Apply template with patient information
-    let templateContent = processTemplate(selectedTemplate.content);
+    const templateContent = processTemplate(selectedTemplate.content);
     
     // Add the standard patient header and footer
     return `

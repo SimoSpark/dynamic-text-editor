@@ -60,54 +60,54 @@ export default function PatientPage() {
   };
 
   const handleSave = async () => {
-    if (!patient) return;
+  if (!patient) return;
+  
+  try {
+    setSaving(true);
     
-    try {
-      setSaving(true);
+    // Make API request to save the rapport
+    const response = await fetch(`/api/patients/${patient.id}`, {  // Changed endpoint!
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ rapport }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Failed to save report';
       
-      // Make API request to save the rapport
-      const response = await fetch(`/api/patients/${patient.id}/reports`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ rapport }),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage = 'Failed to save report';
-        
-        // Try to parse the error as JSON, but if it fails, use the text
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) {
-          errorMessage = `Server error: ${response.status}`;
-        }
-        
-        throw new Error(errorMessage);
+      // Try to parse the error as JSON, but if it fails, use the text
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server error: ${response.status}`;
       }
       
-      const updatedPatient = await response.json();
-      
-      // Update local state with the saved patient data
-      setPatient(prev => prev ? {...prev, rapport} : null);
-      
-      // For compatibility with the existing code, also update the local data
-      const updatedLocalPatient = {...patient, rapport};
-      updatePatient(updatedLocalPatient);
-      
-      alert("Le rapport médical a été enregistré.");
-    } catch (error) {
-      console.error("Error saving report:", error);
-      alert(`Erreur lors de l'enregistrement du rapport: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    } finally {
-      setSaving(false);
+      throw new Error(errorMessage);
     }
-  };
+    
+    const updatedPatient = await response.json();
+    
+    // Update local state with the saved patient data
+    setPatient(prev => prev ? {...prev, rapport} : null);
+    
+    // For compatibility with the existing code, also update the local data
+    const updatedLocalPatient = {...patient, rapport};
+    updatePatient(updatedLocalPatient);
+    
+    alert("Le rapport médical a été enregistré.");
+  } catch (error) {
+    console.error("Error saving report:", error);
+    alert(`Erreur lors de l'enregistrement du rapport: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+  } finally {
+    setSaving(false);
+  }
+};
   
-  // We can print the report 
+  // print the report 
   const handlePrint = () => {
     window.print();
   };
